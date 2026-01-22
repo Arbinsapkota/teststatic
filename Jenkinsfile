@@ -1,3 +1,4 @@
+
 pipeline {
   agent any
   options { timestamps() }
@@ -14,41 +15,42 @@ pipeline {
       steps {
         bat '''
           if not exist index.html (echo index.html NOT FOUND! & exit /b 1)
-          if not exist style.css  (echo style.css NOT FOUND!  & exit /b 1)
-          echo OK: Found index.html and style.css
+          if not exist style.css (echo style.css NOT FOUND! & exit /b 1)
+          echo Files validated successfully.
+        '''
+      }
+    }
+
+    stage('Kill Port 3000 (If Running)') {
+      steps {
+        bat '''
+          echo Checking if port 3000 is in use...
+          powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"
+          echo Port 3000 cleaned.
         '''
       }
     }
 
     stage('Serve Website on Port 3000') {
       steps {
-
-        // Free port 3000 if something is already using it
         bat '''
-          powershell -NoProfile -Command ^
-            "$c = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; ^
-             if ($c) { try { Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue } catch {} }"
-        '''
-
-        // Detect whether 'py' or 'python' is available
-        bat '''
-          set "PYCMD="
-          where py >nul 2>nul && set "PYCMD=py -3"
-          if not defined PYCMD where python >nul 2>nul && set "PYCMD=python"
+          echo Detecting Python...
+          set PYCMD=
+          where py >nul 2>nul && set PYCMD=py -3
+          if not defined PYCMD where python >nul 2>nul && set PYCMD=python
           if not defined PYCMD (
             echo ERROR: Python not found in PATH!
             exit /b 1
           )
 
-          for %%A in ("%WORKSPACE%") do set "WDIR=%%~fA"
-          echo Using Python command: %PYCMD%
-          echo Starting server from %WDIR% ...
+          echo Python detected: %PYCMD%
 
-          start "" /B cmd /c "cd /d %WDIR% && %PYCMD% -m http.server 3000 > %TEMP%\\site-3000.log 2>&1"
+          echo Starting server...
+          start "" /B cmd /c "%PYCMD% -m http.server 3000 > %TEMP%\\site-3000.log 2>&1"
 
           echo ==================================================
-          echo  WEBSITE LIVE: http://localhost:3000/
-          echo  LOG FILE: %TEMP%\\site-3000.log
+          echo Website is LIVE at: http://localhost:3000/
+          echo Logs: %TEMP%\\site-3000.log
           echo ==================================================
         '''
       }
@@ -57,14 +59,13 @@ pipeline {
 
   post {
     success {
-      echo 'Success! Open http://localhost:3000/'
+      echo 'SUCCESS! Open http://localhost:3000/'
     }
     failure {
-      echo 'Build failed. Check Console Output for errors.'
+      echo 'Build failed!'
     }
   }
 }
-
 
 
 
