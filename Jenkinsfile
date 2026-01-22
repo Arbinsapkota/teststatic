@@ -1,9 +1,19 @@
 
+
 pipeline {
   agent any
+
+  // Ensure Jenkins can find python.exe even if started without your user PATH.
+  environment {
+    // Add your Python install to the FRONT of PATH
+    PATH = "C:\\Users\\arbin\\AppData\\Local\\Programs\\Python\\Python314\\;C:\\Users\\arbin\\AppData\\Local\\Programs\\Python\\Python314\\Scripts\\;${env.PATH}"
+    PORT = "3000"
+  }
+
   options { timestamps() }
 
   stages {
+
     stage('Checkout') {
       steps { checkout scm }
     }
@@ -18,12 +28,12 @@ pipeline {
       }
     }
 
-    stage('Kill Port 3000 (If Running) - CMD Only') {
+    stage('Kill Port (If Running) - CMD Only') {
       steps {
         bat '''
-          echo Checking for processes on port 3000...
-          for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":3000" ^| findstr /i "LISTENING"') do (
-            echo Killing PID %%p on port 3000...
+          echo Checking for processes on port %PORT%...
+          for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":%PORT%" ^| findstr /i "LISTENING"') do (
+            echo Killing PID %%p on port %PORT%...
             taskkill /F /PID %%p >nul 2>&1
           )
           rem Always succeed, even if nothing was listening
@@ -32,7 +42,7 @@ pipeline {
       }
     }
 
-    stage('Serve Website on Port 3000') {
+    stage('Serve Website on Port') {
       steps {
         bat '''
           echo Detecting Python...
@@ -41,19 +51,22 @@ pipeline {
           if not defined PYCMD where python >nul 2>nul && set "PYCMD=python"
           if not defined PYCMD (
             echo ERROR: Python not found in PATH!
+            echo Current PATH:
+            echo %PATH%
             exit /b 1
           )
           echo Python command: %PYCMD%
 
           for %%A in ("%WORKSPACE%") do set "WDIR=%%~fA"
-          echo Starting server from %WDIR% ...
-          start "" /B cmd /c "cd /d %WDIR% && %PYCMD% -m http.server 3000 > %TEMP%\\site-3000.log 2>&1"
+          echo Starting server from %WDIR% on port %PORT% ...
+          start "" /B cmd /c "cd /d %WDIR% && %PYCMD% -m http.server %PORT% > %TEMP%\\site-%PORT%.log 2>&1"
 
+          rem Give the server a moment to bind the port
           timeout /t 2 /nobreak >nul
 
           echo ==================================================
-          echo  WEBSITE LIVE at: http://localhost:3000/
-          echo  LOG FILE: %TEMP%\\site-3000.log
+          echo  WEBSITE LIVE at: http://localhost:%PORT%/
+          echo  LOG FILE: %TEMP%\\site-%PORT%.log
           echo ==================================================
         '''
       }
@@ -61,10 +74,15 @@ pipeline {
   }
 
   post {
-    success { echo 'SUCCESS! Open http://localhost:3000/' }
-    failure { echo 'Build failed. Check Console Output and %TEMP%\\site-3000.log' }
+    success {
+      echo 'SUCCESS! Open http://localhost:' + env.PORT + '/'
+    }
+    failure {
+      echo 'Build failed. Check Console Output and %TEMP%\\site-' + env.PORT + '.log'
+    }
   }
 }
+
 
 // Example Jenkinsfile for Linux/MacOS systems using shell commands
 
