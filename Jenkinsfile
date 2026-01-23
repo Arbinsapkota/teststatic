@@ -1,14 +1,11 @@
+
 pipeline {
   agent any
 
   options { timestamps() }
 
   environment {
-
-    // The folder Apache serves your website from
-
-    // Where Apache serves files (XAMPP on Windows)
-
+    // XAMPP Apache web directory
     DEPLOY_DIR = 'C:\\xampp\\htdocs'
   }
 
@@ -33,29 +30,25 @@ pipeline {
       }
     }
 
-    stage('Deploy HTML/CSS/JS') {
+    stage('Deploy HTML') {
       steps {
-
+        // Copy site files to Apache root
         bat 'xcopy * "%DEPLOY_DIR%" /E /H /C /Y /I'
-
-        // Copy everything except .git and Jenkinsfile itself
-        bat '''
-          xcopy * "%DEPLOY_DIR%" /E /H /C /Y /I
-          if exist ".git" rd /s /q ".git"
-        '''
-
       }
     }
   }
 
+  // ✅ Only one post block at the pipeline level
   post {
-    success { echo 'DONE! Website updated: http://localhost' }
-    failure { echo 'Deployment failed — check console logs.' }
-
-    success { echo '✅ Deployed to XAMPP. Open http://localhost to see the update.' }
-    failure { echo '❌ Deployment failed. Check Console Output.' }
+    success {
+      echo '✨ Deployment done! Visit: http://localhost'
+    }
+    failure {
+      echo '❌ Deployment failed. Check Console Output.'
+    }
   }
 }
+``
 
 
 // pipeline {
