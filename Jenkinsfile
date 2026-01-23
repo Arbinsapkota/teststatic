@@ -1,86 +1,30 @@
 
-
 pipeline {
-  agent any
+    agent any
 
-  // Ensure Jenkins can find python.exe even if started without your user PATH.
-  environment {
-    // Add your Python install to the FRONT of PATH
-    PATH = "C:\\Users\\arbin\\AppData\\Local\\Programs\\Python\\Python314\\;C:\\Users\\arbin\\AppData\\Local\\Programs\\Python\\Python314\\Scripts\\;${env.PATH}"
-    PORT = "3000"
-  }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-  options { timestamps() }
-
-  stages {
-
-    stage('Checkout') {
-      steps { checkout scm }
+        stage('Deploy HTML Files') {
+            steps {
+                // Replace with your server path
+                sh '''
+                    sudo rm -rf /var/www/html/*
+                    sudo cp -r * /var/www/html/
+                '''
+            }
+        }
     }
 
-    stage('Validate Files') {
-      steps {
-        bat '''
-          if not exist index.html (echo index.html NOT FOUND! & exit /b 1)
-          if not exist style.css  (echo style.css  NOT FOUND! & exit /b 1)
-          echo Files validated successfully.
-        '''
-      }
+    post {
+        success {
+            echo "Website updated successfully!"
+        }
     }
-
-    stage('Kill Port (If Running) - CMD Only') {
-      steps {
-        bat '''
-          echo Checking for processes on port %PORT%...
-          for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":%PORT%" ^| findstr /i "LISTENING"') do (
-            echo Killing PID %%p on port %PORT%...
-            taskkill /F /PID %%p >nul 2>&1
-          )
-          rem Always succeed, even if nothing was listening
-          exit /b 0
-        '''
-      }
-    }
-
-    stage('Serve Website on Port') {
-      steps {
-        bat '''
-          echo Detecting Python...
-          set "PYCMD="
-          where py >nul 2>nul && set "PYCMD=py -3"
-          if not defined PYCMD where python >nul 2>nul && set "PYCMD=python"
-          if not defined PYCMD (
-            echo ERROR: Python not found in PATH!
-            echo Current PATH:
-            echo %PATH%
-            exit /b 1
-          )
-          echo Python command: %PYCMD%
-
-          for %%A in ("%WORKSPACE%") do set "WDIR=%%~fA"
-          echo Starting server from %WDIR% on port %PORT% ...
-          start "" /B cmd /c "cd /d %WDIR% && %PYCMD% -m http.server %PORT% > %TEMP%\\site-%PORT%.log 2>&1"
-
-          rem Give the server a moment to bind the port
-          timeout /t 2 /nobreak >nul
-
-          echo ==================================================
-          echo  WEBSITE LIVE at: http://localhost:%PORT%/
-          echo  LOG FILE: %TEMP%\\site-%PORT%.log
-          echo ==================================================
-        '''
-      }
-    }
-  }
-
-  post {
-    success {
-      echo 'SUCCESS! Open http://localhost:' + env.PORT + '/'
-    }
-    failure {
-      echo 'Build failed. Check Console Output and %TEMP%\\site-' + env.PORT + '.log'
-    }
-  }
 }
 
 
