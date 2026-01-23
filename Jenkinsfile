@@ -5,7 +5,11 @@ pipeline {
   options { timestamps() }
 
   environment {
+<<<<<<< HEAD
     // The folder Apache serves your website from
+=======
+    // Where Apache serves files (XAMPP on Windows)
+>>>>>>> 33589235665bd38e19c775e5a8a17f2839b0479f
     DEPLOY_DIR = 'C:\\xampp\\htdocs'
   }
 
@@ -18,6 +22,7 @@ pipeline {
 
     stage('Clean target folder') {
       steps {
+        // Windows-safe cleanup: delete contents but not the folder itself
         bat '''
           if exist "%DEPLOY_DIR%" (
             del /Q "%DEPLOY_DIR%\\*.*" 2>nul
@@ -31,16 +36,58 @@ pipeline {
 
     stage('Deploy HTML/CSS/JS') {
       steps {
+<<<<<<< HEAD
         bat 'xcopy * "%DEPLOY_DIR%" /E /H /C /Y /I'
+=======
+        // Copy everything except .git and Jenkinsfile itself
+        bat '''
+          xcopy * "%DEPLOY_DIR%" /E /H /C /Y /I
+          if exist ".git" rd /s /q ".git"
+        '''
+>>>>>>> 33589235665bd38e19c775e5a8a17f2839b0479f
       }
     }
   }
 
   post {
+<<<<<<< HEAD
     success { echo 'DONE! Website updated: http://localhost' }
     failure { echo 'Deployment failed — check console logs.' }
+=======
+    success { echo '✅ Deployed to XAMPP. Open http://localhost to see the update.' }
+    failure { echo '❌ Deployment failed. Check Console Output.' }
+>>>>>>> 33589235665bd38e19c775e5a8a17f2839b0479f
   }
 }
+
+
+// pipeline {
+//     agent any
+
+//     stages {
+//         stage('Checkout') {
+//             steps {
+//                 checkout scm
+//             }
+//         }
+
+//         stage('Deploy HTML Files') {
+//             steps {
+//                 // Replace with your server path
+//                 sh '''
+//                     sudo rm -rf /var/www/html/*
+//                     sudo cp -r * /var/www/html/
+//                 '''
+//             }
+//         }
+//     }
+
+//     post {
+//         success {
+//             echo "Website updated successfully!"
+//         }
+//     }
+// }
 
 
 // Example Jenkinsfile for Linux/MacOS systems using shell commands
