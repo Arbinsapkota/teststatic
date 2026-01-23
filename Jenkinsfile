@@ -5,11 +5,11 @@ pipeline {
   options { timestamps() }
 
   environment {
-<<<<<<< HEAD
+
     // The folder Apache serves your website from
-=======
+
     // Where Apache serves files (XAMPP on Windows)
->>>>>>> 33589235665bd38e19c775e5a8a17f2839b0479f
+
     DEPLOY_DIR = 'C:\\xampp\\htdocs'
   }
 
