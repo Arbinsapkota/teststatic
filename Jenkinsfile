@@ -2,7 +2,7 @@
 pipeline {
   agent any
 
-  options { timestamps(); ansiColor('xterm') }
+  options { timestamps() }
 
   environment {
     // Where Apache serves files (XAMPP on Windows)
