@@ -1,4 +1,3 @@
-
 pipeline {
   agent any
 
@@ -36,27 +35,25 @@ pipeline {
 
     stage('Deploy HTML/CSS/JS') {
       steps {
-<<<<<<< HEAD
+
         bat 'xcopy * "%DEPLOY_DIR%" /E /H /C /Y /I'
-=======
+
         // Copy everything except .git and Jenkinsfile itself
         bat '''
           xcopy * "%DEPLOY_DIR%" /E /H /C /Y /I
           if exist ".git" rd /s /q ".git"
         '''
->>>>>>> 33589235665bd38e19c775e5a8a17f2839b0479f
+
       }
     }
   }
 
   post {
-<<<<<<< HEAD
     success { echo 'DONE! Website updated: http://localhost' }
     failure { echo 'Deployment failed — check console logs.' }
-=======
+
     success { echo '✅ Deployed to XAMPP. Open http://localhost to see the update.' }
     failure { echo '❌ Deployment failed. Check Console Output.' }
->>>>>>> 33589235665bd38e19c775e5a8a17f2839b0479f
   }
 }
 
