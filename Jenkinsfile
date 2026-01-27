@@ -4,8 +4,8 @@ pipeline {
     environment {
         REPO_URL = "https://github.com/Arbinsapkota/docker.git"
         BRANCH = "main"
-        CONTAINER_NAME = "static"
-        PORT = "5000"
+        CONTAINER_NAME = "site2"
+        PORT = "4000"
     }
 
     stages {
