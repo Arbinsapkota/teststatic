@@ -12,16 +12,15 @@ pipeline {
     PORT           = '4000'
   }
 
-  // Poll every minute. Remove this if you later enable a working GitHub webhook.
+  // Poll every minute (remove once you enable a GitHub webhook)
   triggers { pollSCM('* * * * *') }
 
   stages {
-
     stage('Checkout & Info') {
       steps {
-        // Jenkins already checks out when "Pipeline from SCM" is used,
-        // these just help with visibility and debugging.
-        bat 'git --version'
+        // Jenkins already checks out (Pipeline from SCM),
+        // these commands just give useful context in logs.
+        bat 'git --version & docker --version'
         bat 'git log -1 --oneline'
       }
     }
@@ -39,32 +38,26 @@ pipeline {
       }
     }
 
-    stage('Build Docker Image') {
+    stage('Build Image') {
       steps {
-        // Build cleanly and tag with commit + latest
-        bat 'docker builder prune -f'
-        bat 'docker build --pull --no-cache --label commit_hash=%COMMIT_HASH% -t %CONTAINER_NAME%:%COMMIT_HASH% .'
+        // Use cache for faster builds (no --no-cache)
+        bat 'docker build -t %CONTAINER_NAME%:%COMMIT_HASH% .'
         bat 'docker tag %CONTAINER_NAME%:%COMMIT_HASH% %CONTAINER_NAME%:latest'
       }
     }
 
     stage('Deploy') {
       steps {
-        // Replace running container with the new image
-        bat 'docker rm -f %CONTAINER_NAME% || echo no existing container'
+        bat 'docker rm -f %CONTAINER_NAME% 2>NUL || echo no existing container'
         bat 'docker run -d -p %PORT%:80 --name %CONTAINER_NAME% %CONTAINER_NAME%:%COMMIT_HASH%'
       }
     }
 
     stage('Verify') {
       steps {
-        // Use PowerShell for a robust HTTP 200 check on Windows
-        bat '''
-powershell -NoProfile -Command ^
-  "$r = Invoke-WebRequest -Uri http://localhost:%PORT% -UseBasicParsing; ^
-   Write-Host ('HTTP ' + $r.StatusCode); ^
-   if ($r.StatusCode -ge 400) { exit 1 }"
-'''
+        // Robust, single-line curl on Windows.
+        // IMPORTANT: %%{http_code} (double %) escapes properly in CMD.
+        bat 'curl --fail --silent --show-error --location -o NUL -w "HTTP %%{http_code}\\n" http://localhost:%PORT%'
       }
     }
   }
@@ -74,7 +67,7 @@ powershell -NoProfile -Command ^
       echo "✅ Deployed: http://localhost:${PORT}"
     }
     failure {
-      echo "❌ Deployment failed. Container logs (tail):"
+      echo "❌ Deployment failed. Container logs:"
       bat 'docker logs --tail 200 %CONTAINER_NAME% || echo no container logs'
     }
   }
