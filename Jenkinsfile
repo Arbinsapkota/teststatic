@@ -74,16 +74,22 @@ pipeline {
     }
   }
 
-  post {
-    success {
-      echo "✅ Deployed: http://localhost:${PORT}"
-    }
-    failure {
-      echo "❌ Deployment failed. Container logs:"
-      // Ensure a node/workspace exists even if checkout failed
-      node {
-        bat 'docker ps -a'
-        bat 'docker logs --tail 200 %CONTAINER_NAME% || echo no container logs'
+  
+
+  success {
+    echo "✅ Deployed: http://localhost:${PORT}"
+  }
+  failure {
+    echo "❌ Deployment failed. Container logs:"
+    script {
+      if (env.WORKSPACE) {
+        dir(env.WORKSPACE) {
+          // Diagnostics that are safe even if the container wasn't created
+          bat 'docker ps -a'
+          bat 'docker logs --tail 200 %CONTAINER_NAME% || echo no container logs'
+        }
+      } else {
+        echo 'No workspace available to run docker diagnostics.'
       }
     }
   }
