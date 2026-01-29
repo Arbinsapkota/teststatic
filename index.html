@@ -1,58 +1,72 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FIRST DOCKER</title>
-    <!-- Link external CSS -->
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    
-<center>
-  <h1 style="
-    background: linear-gradient(90deg, #ff512f, #dd2476);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  ">
-    FIRST HEY PRETTY STRANGER <br/> IT'S MY 1st
-     DOCKER PROJECT   CICD JENKINS WITH GITHUB VIA @ARBIN 
-     
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>First Docker Project | Arbin</title>
 
-  </h1>
-</center>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />  
+</head>
 
+<body>
+  <div class="card">
+    <div class="badge">🚀 FIRST DOCKER PROJECT</div>
+
+    <h1>
+      Hey Pretty Stranger 👋 <br />
+      Docker + CI/CD with Jenkins
+    </h1>
+
+    <p class="subtitle">
+      My first Dockerized application deployed using
+      <strong>Jenkins CI/CD</strong> and <strong>GitHub</strong>
+    </p>
+
+    <div class="info">
+      <div class="info-box">
+        <h3>🐳 Docker</h3>
+        <p>Containerized Application</p>
+      </div>
+      <div class="info-box">
+        <h3>🔁 CI/CD</h3>
+        <p>Automated Pipeline</p>
+      </div>
+      <div class="info-box">
+        <h3>⚙️ Jenkins</h3>
+        <p>Build & Deploy</p>
+      </div>
+      <div class="info-box">
+        <h3>👨‍💻 Author</h3>
+        <p>@Arbin Sapkota</p>
+      </div>
+    </div>
 
     <p id="date"></p>
 
     <footer>
-      <center>
-        <a href="https://github.com/Arbinsapkota/Arbinsapkota">
-          by @Arbin sapkota
-        </a>
-      </center>
+      <a href="https://github.com/Arbinsapkota/Arbinsapkota" target="_blank">
+        🔗 github.com/Arbinsapkota
+      </a>
     </footer>
+  </div>
 
-    <script>
-      function getCurrentDateTime() {
-        var currentDateTime = new Date();
-        var formattedDateTime =
-          "Your local datetime is: " +
-          currentDateTime.toDateString() +
-          ", " +
-          currentDateTime.toLocaleTimeString();
-        return formattedDateTime;
-      }
+  <script>
+    function getCurrentDateTime() {
+      const now = new Date();
+      return (
+        "Your local time: " +
+        now.toDateString() +
+        " • " +
+        now.toLocaleTimeString()
+      );
+    }
 
-      // Initial render
+    document.getElementById("date").innerHTML = getCurrentDateTime();
+    setInterval(() => {
       document.getElementById("date").innerHTML = getCurrentDateTime();
-
-      // Update every second
-      setInterval(function () {
-        document.getElementById("date").innerHTML = getCurrentDateTime();
-      }, 1000);
-    </script>
-  </body>
+    }, 1000);
+  </script>
+</body>
 </html>
