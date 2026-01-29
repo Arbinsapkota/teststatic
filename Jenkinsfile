@@ -12,14 +12,27 @@ pipeline {
     PORT           = '4000'
   }
 
-  // Poll every minute (remove once you enable a GitHub webhook)
+  // Poll every minute (remove after you switch to a GitHub webhook)
   triggers { pollSCM('* * * * *') }
 
   stages {
+
+    // Optional but recommended: resilient checkout
+    stage('Checkout') {
+      steps {
+        script {
+          retry(3) {
+            sleep time: 2, unit: 'SECONDS' // small backoff smooths race with polling
+            checkout scm
+          }
+        }
+      }
+    }
+
     stage('Checkout & Info') {
       steps {
-        // Jenkins already checks out (Pipeline from SCM),
-        // these commands just give useful context in logs.
+        // Jenkins already does an SCM checkout when "Pipeline from SCM" is used,
+        // but this stage gives useful context in logs.
         bat 'git --version & docker --version'
         bat 'git log -1 --oneline'
       }
@@ -30,7 +43,7 @@ pipeline {
         script {
           env.COMMIT_HASH = bat(
             label: 'Get short commit hash',
-            script: '@echo off\r\nfor /f %%a in (\'git rev-parse --short HEAD\') do @echo %%a',
+            script: '@echo off\r\nfor /f %a in (\'git rev-parse --short HEAD\') do @echo %a',
             returnStdout: true
           ).trim()
           echo "Commit: ${env.COMMIT_HASH}"
@@ -55,8 +68,7 @@ pipeline {
 
     stage('Verify') {
       steps {
-        // Robust, single-line curl on Windows.
-        // IMPORTANT: %%{http_code} (double %) escapes properly in CMD.
+        // Windows curl: use %% to escape %{http_code} for CMD
         bat 'curl --fail --silent --show-error --location -o NUL -w "HTTP %%{http_code}\\n" http://localhost:%PORT%'
       }
     }
@@ -68,7 +80,12 @@ pipeline {
     }
     failure {
       echo "❌ Deployment failed. Container logs:"
-      bat 'docker logs --tail 200 %CONTAINER_NAME% || echo no container logs'
+      // Ensure a node/workspace exists even if checkout failed
+      node {
+        bat 'docker ps -a'
+        bat 'docker logs --tail 200 %CONTAINER_NAME% || echo no container logs'
+      }
     }
   }
 }
+``
