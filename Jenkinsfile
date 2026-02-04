@@ -27,7 +27,7 @@ pipeline {
 
     // 🔁 CHANGE THIS to expose a different host port (container still listens on 80)
     // e.g., '8080' -> curl http://localhost:8080
-    PORT = '4040'
+    PORT = '4444'
 
     // 🏷️ Image base name (local). Usually same as container name; adjust if desired.
     // If you change this, Jenkins will build/tag IMAGE_BASENAME:<commit/ latest>
